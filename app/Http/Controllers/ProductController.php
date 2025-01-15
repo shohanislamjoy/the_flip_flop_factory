@@ -1,36 +1,32 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Http\Resources\ProductResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         $products = Product::all();
-        return ProductResource::collection($products);
+        return response()->json($products);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'catagory' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $imagePath = null;
@@ -39,60 +35,59 @@ class ProductController extends Controller
         }
 
         $product = Product::create([
-            'name' => $validated['name'],
-            'catagory' => $validated['catagory'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
-            'stock' => $validated['stock'],
+            'name' => $request->name,
+            'catagory' => $request->catagory,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock' => $request->stock,
             'image_path' => $imagePath,
-            'created_by' => auth()->id(),
-            'updated_by' => auth()->id(),
+            'created_by' => Auth::id(), // Use Auth facade to retrieve authenticated user
+            'updated_by' => Auth::id(),
         ]);
 
-        return new ProductResource($product);
+        return response()->json($product, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $product = Product::findOrFail($id);
-        return new ProductResource($product);
+        return response()->json($product);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'catagory' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric|min:0',
-            'stock' => 'sometimes|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'catagory' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        $imagePath = $product->image_path;
         if ($request->hasFile('image')) {
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
             }
-            $validated['image_path'] = $request->file('image')->store('products', 'public');
+            $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        $validated['updated_by'] = auth()->id();
-        $product->update($validated);
+        $product->update([
+            'name' => $request->name,
+            'catagory' => $request->catagory,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock' => $request->stock,
+            'image_path' => $imagePath,
+            'updated_by' => Auth::id(),
+        ]);
 
-        return new ProductResource($product);
+        return response()->json($product);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
@@ -103,6 +98,6 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return response()->json(['message' => 'Product deleted successfully.']);
+        return response()->json(['message' => 'Product deleted successfully']);
     }
 }
