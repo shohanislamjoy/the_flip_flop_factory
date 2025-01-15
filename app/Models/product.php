@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
-    use HasFactory;
+    protected $grauded = [];
+
 }
