@@ -38,7 +38,7 @@ const AddProductForm = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/products', {
+      const response = await fetch('http://localhost:8000/products', {
         method: 'POST',
         body: formData,
       });

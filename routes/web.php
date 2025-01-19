@@ -25,7 +25,7 @@ Route::get('/product_list', function () {
 
 Route::get('/add_product', function () {
     return Inertia::render('Product_form');
-})->name('add-product');
+})->middleware(['auth', 'verified'])->name('Product_form');
 
 
 Route::middleware('auth')->group(function () {
