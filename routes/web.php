@@ -27,6 +27,10 @@ Route::get('/add_product', function () {
     return Inertia::render('Product_form');
 })->middleware(['auth', 'verified'])->name('Product_form');
 
+Route::get('/product_list', function () {
+    return Inertia::render('ProductList');
+})->middleware(['auth', 'verified'])->name('Product_list');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
